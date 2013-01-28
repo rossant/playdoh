@@ -1,0 +1,67 @@
+.. currentmodule:: playdoh
+
+Examples
+========
+
+These examples cover some basic topics in using Playdoh.
+The complete source code for the examples is available in the examples folder.
+
+.. EXAMPLES TOCTREE
+
+.. toctree::
+   :maxdepth: 1
+
+.. _examples_independent:
+
+Independent parallel problems
+-----------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-map
+   examples-map_async
+   examples-map_dependencies
+   examples-map_lambda
+   examples-map_shared
+   examples-gpu
+
+
+.. _examples_optimization:
+
+Optimization
+------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-maximize
+   examples-maximize_matrix
+   examples-maximize_class
+   examples-maximize_groups
+
+
+.. _examples_loosely:
+
+Loosely coupled parallel problems
+---------------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-monte_carlo
+   examples-heat_equation
+
+   
+   
+
+.. _examples_allocation:
+
+Resource allocation
+-------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   examples-allocation
+   examples-resources

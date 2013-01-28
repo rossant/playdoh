@@ -1,0 +1,10 @@
+include examples/*.py
+include playdoh/*.py
+include playdoh/codehandler/*.py
+include playdoh/optimization/*.py
+include playdoh/scripts/*.py
+include test/*.py
+exclude dev/*.*
+exclude dist/*.*
+exclude docs_sphinx/*.*
+include README.txt

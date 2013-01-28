@@ -1,0 +1,169 @@
+.. currentmodule:: playdoh
+
+.. _reference:
+
+*****************
+Playdoh Reference
+*****************
+
+This page details the usage of the functions and classes of Playdoh.
+
+.. seealso:: User guide for :ref:`playdoh`.
+
+
+
+
+Main functions and classes
+==========================
+
+This section details the usage of the Playdoh functions that
+are used to launch computations.
+
+.. _ref_independent:
+
+Independent parallel problems
+-----------------------------
+
+.. autofunction:: map(fun, **kwds)
+
+.. autofunction:: map_async(fun, **kwds)
+
+.. autoclass:: JobRun()
+
+.. seealso:: User guide for :ref:`guide_independent`.
+
+
+
+
+.. _ref_optimization:
+
+Optimization
+------------
+
+.. autofunction:: minimize(fun, **kwds)
+
+.. autofunction:: maximize(fun, **kwds)
+
+.. autofunction:: minimize_async(fun, **kwds)
+
+.. autofunction:: maximize_async(fun, **kwds)
+
+.. autofunction:: print_table
+
+.. autoclass:: Fitness()
+
+.. autoclass:: PSO
+
+.. autoclass:: CMAES
+
+.. autoclass:: GA
+
+.. autoclass:: OptimizationRun()
+
+.. autoclass:: OptimizationResult()
+
+.. seealso:: User guide for :ref:`guide_optimization`.
+
+
+
+
+.. _ref_loosely:
+
+Loosely coupled parallel problems
+---------------------------------
+
+.. autofunction:: start_task()
+
+.. autoclass:: ParallelTask()
+
+.. autoclass:: TaskRun()
+
+.. seealso:: User guide for :ref:`guide_loosely`.
+
+
+
+
+Other functions and classes
+===========================
+
+This section details the usage of other Playdoh functions and classes.
+
+.. _ref_machines:
+
+Playdoh Server
+--------------
+
+.. autofunction:: open_server(port=None, maxcpu=None, maxgpu=None)
+
+.. autofunction:: close_servers()
+
+.. seealso:: User guide for :ref:`guide_machines`.
+
+
+
+
+.. _ref_allocation:
+
+Resource allocation
+-------------------
+
+.. autoclass:: Allocation
+
+.. autofunction:: allocate
+
+.. autofunction:: get_server_resources
+
+.. autofunction:: get_my_resources
+
+.. autofunction:: get_available_resources
+
+.. autofunction:: request_resources
+
+.. autofunction:: request_all_resources
+
+.. autofunction:: get_total_resources
+
+.. autofunction:: set_total_resources
+
+.. autofunction:: get_gpu_count
+
+
+
+
+.. _ref_commandline:
+
+Command line tool
+-----------------
+
+Playdoh includes a command-line tool which is automatically installed on your system
+when you install Playdoh. On both Unix and Windows systems, you should be able
+to directly use this tool with the command ``playdoh``.  
+This tool allows you to open a server, close a server remotely, obtain the available
+resources on distant servers and allocate resources.
+    
+Here are a few usage examples ::
+    
+    # open the server with all possible resources
+    playdoh open
+    
+    # open the server with 4 CPUs and 1 GPU
+    playdoh open 4 CPU 1 GPU
+    
+    # change the total number of resources available on this machine
+    playdoh set 2 CPUs 0 GPU
+    
+    # show the available resources/all resources on the given server
+    playdoh get bobs-machine.university.com [all]
+    
+    # request 2 CPUs and 1 GPU on the server
+    playdoh request bobs-machine.university.com 2 CPUs 1 GPU
+    
+    # request all resources on the server
+    playdoh request bobs-machine.university.com all CPUs all GPUs
+    
+    # close the server on this machine
+    playdoh close
+    
+    # close a server remotely
+    playdoh close bobs-machine.university.com
+  
