@@ -1,0 +1,123 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Playdoh by rossant</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Playdoh</h1>
+        <p>Lightweight Python library for distributed computing and optimization </p>
+
+        <p class="view"><a href="https://github.com/rossant/playdoh">View the Project on GitHub <small>rossant/playdoh</small></a></p>
+
+
+        <ul>
+          <li><a href="https://github.com/rossant/playdoh/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/rossant/playdoh/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/rossant/playdoh">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h1>Playdoh: pure Python library for distributed computing and optimization </h1>
+
+<p>Playdoh is a pure Python library for distributing computations across the 
+free computing units (CPUs and GPUs) available in a small network of 
+multicore computers. Playdoh supports independent (embarassingly) parallel 
+problems as well as loosely coupled tasks such as global optimizations, 
+Monte Carlo simulations and numerical integration of partial differential 
+equations. It is designed to be <em>lightweight</em> and <em>easy-to-use</em> and should 
+be of interest to scientists wanting to turn their lab computers into a 
+small cluster at no cost.</p>
+
+<h2>Features</h2>
+
+<ul>
+<li>
+<strong>Standalone, lightweight, easy-to-use pure Python library</strong> for 
+small-scale distributed scientific computing</li>
+<li>
+<p><strong>Parallel/distributed version of <code>map</code></strong>: call any Python function 
+with different parameters in parallel over different CPUs/computers 
+interconnected within a standard Ethernet network</p>
+
+<pre><code>import playdoh
+result = playdoh.map(lambda x: x * x, [1, 2], cpu=2)  # result == [1, 4]
+</code></pre>
+</li>
+<li><p><strong>Built-in support for GPU through PyCUDA</strong>: if you provide the 
+PyCUDA/CUDA code, Playdoh can run it on several GPUs (on one or more 
+computers) in parallel</p></li>
+<li><p><strong>Built-in distributed optimization toolbox</strong>: you provide an 
+objective Python function, and Playdoh will minimize or maximize it in 
+parallel over several CPUs/computers (or GPUs if you give the 
+PyCUDA/CUDA code) using a particle-based gradient-free optimization 
+algorithm (CMA-ES, Genetic Algorithms or Particle Swarm Optimization 
+algorithm)</p></li>
+<li><p><strong>Simple coarse-grained distributed computing interface</strong>: you can 
+distribute your computations into loosely-coupled tasks and run them in 
+parallel over CPUs and computers, inter-node communication happening 
+through blocking FIFO tubes exposing a straightforward push/pull 
+interface (examples include distributed PDE solvers, cellular automata, 
+Monte Carlo simulators, optimizations...)</p></li>
+<li><p><strong>Code handling</strong>: Playdoh handles the transport of your Python code 
+between machines</p></li>
+<li><p><strong>Resources sharing</strong>: specify how many CPUs you dedicate to others' 
+computations and how many you keep for yourself</p></li>
+</ul><h2>Documentation</h2>
+
+<p><a href="http://playdoh.googlecode.com/svn/docs/index.html">The documentation can be found here</a>.</p>
+
+<h2>Paper</h2>
+
+<p>Rossant C, Fontaine B, Goodman DFM (2011).
+<a href="http://www.sciencedirect.com/science/article/pii/S1877750311000561"><strong>Playdoh: a lightweight Python package for distributed computing and optimisation</strong></a>. <em>Journal of Computational Science</em></p>
+
+<h3>Abstract</h3>
+
+<p>Parallel computing is now an essential paradigm for high performance 
+scientific computing. Most existing hardware and software solutions are 
+expensive or difficult to use. We developed Playdoh, a Python library for 
+distributing computations across the free computing units available in a 
+small network of multicore computers. Playdoh supports independent and 
+loosely coupled parallel problems such as global optimisations, Monte 
+Carlo simulations and numerical integration of partial differential 
+equations. It is designed to be lightweight and easy to use and should be 
+of interest to scientists wanting to turn their lab computers into a small 
+cluster at no cost.</p>
+
+<h2>Contribute</h2>
+
+<p>Playdoh is an open-source project and anyone is welcome to contribute to 
+the project. Here are some info about the source code.</p>
+
+<ul>
+<li><p>There's a unit testing suite in the <code>test</code> directory, it can be 
+launched with the <code>test.py</code> script.</p></li>
+<li><p>A document explaining how to add new features to Playdoh (like a new 
+optimization algorithm) will be available soon.</p></li>
+<li><p>A document explaining the internal implementation details of Playdoh 
+will be available soon, it will be the starting point if you want to 
+contribute to the code.</p></li>
+<li><p>You can submit issues, ideas, comments on the
+<a href="http://groups.google.com/group/playdoh-library">Playdoh Google group</a>.</p></li>
+</ul>
+      </section>
+      <footer>
+        <p>This project is maintained by <a href="https://github.com/rossant">rossant</a></p>
+        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></small></p>
+      </footer>
+    </div>
+    <script src="javascripts/scale.fix.js"></script>
+    
+  </body>
+</html>
