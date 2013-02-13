@@ -1,0 +1,739 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Playdoh User Guide &mdash; Playdoh v0.3.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Playdoh v0.3.1 documentation" href="index.html" />
+    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="prev" title="Welcome to Playdoh’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="examples.html" title="Examples"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Playdoh’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Playdoh v0.3.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="playdoh-user-guide">
+<span id="playdoh"></span><h1>Playdoh User Guide<a class="headerlink" href="#playdoh-user-guide" title="Permalink to this headline">¶</a></h1>
+<p>Playdoh is a pure Python library for distributing
+computations across the free computing units (CPUs and GPUs) available in a small network
+of multicore computers. Playdoh
+supports independent (embarassingly) parallel problems as well as loosely coupled
+tasks such as global optimizations, Monte Carlo simulations and numerical integration of
+partial differential equations. It is designed to be lightweight and easy to use and
+should be of interest to scientists wanting to turn their lab computers into a small
+cluster at no cost.</p>
+<p>This user guide is an introduction to Playdoh. It shows how to distribute
+independent parallel tasks, how to distribute optimizations, and how to write loosely coupled parallel
+tasks.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Reference documentation <a class="reference internal" href="reference.html#reference"><em>Playdoh Reference</em></a>.</p>
+</div>
+<div class="section" id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
+<p>First of all, you should have <a class="reference external" href="http://www.python.org/">Python 2.6</a> installed on
+your machine with <a class="reference external" href="http://numpy.scipy.org/">Numpy 1.3</a> at least
+(Playdoh is currently not available for Python 3).
+Then, go to the <a class="reference external" href="http://code.google.com/p/playdoh/downloads/list">download page</a> and download the archive or the executable if you&#8217;re on Windows.
+Finally, install the package with the Windows executable or with the following command:</p>
+<div class="highlight-python"><pre>python setup.py install</pre>
+</div>
+<p>You can also run in a console:</p>
+<div class="highlight-python"><pre>easy_install playdoh</pre>
+</div>
+<p>The installation script requires the Python package <a class="reference external" href="http://pypi.python.org/pypi/setuptools">setuptools</a>
+so that the command-line tool included in Playdoh can be automatically installed. The <cite>setuptools</cite> package
+should be automatically installed when you install Playdoh.
+The installation script automatically installs the following tools: <tt class="docutils literal"><span class="pre">playdoh</span></tt> and <tt class="docutils literal"><span class="pre">playdoh_gui</span></tt>,
+which are a command-line tool and a GUI, respectively.</p>
+<p>All scripts using Playdoh should start by importing the Playdoh package as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="independent-parallel-problems">
+<span id="guide-independent"></span><h3>Independent parallel problems<a class="headerlink" href="#independent-parallel-problems" title="Permalink to this headline">¶</a></h3>
+<p>Playdoh offers a parallel and distributed implementation of the <a class="reference internal" href="reference.html#playdoh.map" title="playdoh.map"><tt class="xref py py-func docutils literal"><span class="pre">map()</span></tt></a> function
+to quickly evaluate a single Python function against several sets of parameters,
+across several CPUs and machines.</p>
+<p>The following example shows how to distribute the function <tt class="docutils literal"><span class="pre">y=x**2</span></tt> across two CPUs:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c"># The function to parallelize</span>
+<span class="k">def</span> <span class="nf">fun</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span><span class="o">**</span><span class="mi">2</span>
+
+<span class="c"># This line is required on Windows, any call to a Playdoh function</span>
+<span class="c"># must be done after this line on this OS.</span>
+<span class="c"># See http://docs.python.org/library/multiprocessing.html#windows</span>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c"># Execute ``fun(1)`` and ``fun(2)`` in parallel on two CPUs on this machine</span>
+    <span class="c"># and return the result.</span>
+    <span class="k">print</span> <span class="nb">map</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">cpu</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Reference for <a class="reference internal" href="reference.html#playdoh.map" title="playdoh.map"><tt class="xref py py-func docutils literal"><span class="pre">map()</span></tt></a>, examples for <a class="reference internal" href="examples.html#examples-independent"><em>Independent parallel problems</em></a>.</p>
+</div>
+</div>
+<div class="section" id="optimization">
+<span id="guide-optimization"></span><h3>Optimization<a class="headerlink" href="#optimization" title="Permalink to this headline">¶</a></h3>
+<p>Playdoh offers two functions <a class="reference internal" href="reference.html#playdoh.minimize" title="playdoh.minimize"><tt class="xref py py-func docutils literal"><span class="pre">minimize()</span></tt></a> and <a class="reference internal" href="reference.html#playdoh.maximize" title="playdoh.maximize"><tt class="xref py py-func docutils literal"><span class="pre">maximize()</span></tt></a> to quickly optimize
+a Python objective function (fitness) in parallel across several CPUs and several
+machines. Three optimization algorithms are available: the particle swarm optimization <a class="reference internal" href="reference.html#playdoh.PSO" title="playdoh.PSO"><tt class="xref py py-class docutils literal"><span class="pre">PSO</span></tt></a>,
+the covariance matrix adaptation evolution strategy <a class="reference internal" href="reference.html#playdoh.CMAES" title="playdoh.CMAES"><tt class="xref py py-class docutils literal"><span class="pre">CMAES</span></tt></a>,
+and an island genetic algorithm <a class="reference internal" href="reference.html#playdoh.GA" title="playdoh.GA"><tt class="xref py py-class docutils literal"><span class="pre">GA</span></tt></a></p>
+<p>The following example shows how to maximize a Gaussian function in one dimension
+across 2 CPUs:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+<span class="c"># The fitness function to maximize</span>
+<span class="k">def</span> <span class="nf">fun</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">x</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c"># Maximize the fitness function in parallel</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">maximize</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span>
+                       <span class="n">popsize</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span> <span class="c"># size of the population</span>
+                       <span class="n">maxiter</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span> <span class="c"># maximum number of iterations</span>
+                       <span class="n">cpu</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span> <span class="c"># number of CPUs to use on the local machine</span>
+                       <span class="n">x_initrange</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">10.</span><span class="p">,</span><span class="mf">10.</span><span class="p">])</span> <span class="c"># initial interval for the ``x`` parameter</span>
+
+    <span class="c"># Display the final results in a table</span>
+    <span class="n">print_table</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Reference for <a class="reference internal" href="reference.html#playdoh.maximize" title="playdoh.maximize"><tt class="xref py py-func docutils literal"><span class="pre">maximize()</span></tt></a>, <a class="reference internal" href="reference.html#playdoh.minimize" title="playdoh.minimize"><tt class="xref py py-func docutils literal"><span class="pre">minimize()</span></tt></a>, examples for <a class="reference internal" href="examples.html#examples-optimization"><em>Optimization</em></a>.</p>
+</div>
+</div>
+<div class="section" id="loosely-coupled-parallel-problems">
+<span id="guide-loosely"></span><h3>Loosely coupled parallel problems<a class="headerlink" href="#loosely-coupled-parallel-problems" title="Permalink to this headline">¶</a></h3>
+<p>Some computational tasks cannot be distributed using the independent
+parallel interface of Playdoh but require some communication between subtasks
+and the introduction of synchronisation
+points. Playdoh offers a simple programming
+interface to do this.</p>
+<p>The following example shows an implementation of a numerical solver of a
+partial differential equation (the heat equation) in parallel across several CPUs.
+There are two steps.</p>
+<ul class="simple">
+<li>First, the task itself must be written: it is a
+Python class which actually performs the computation. Every computing
+unit (node) stores and executes its own instance.
+Communication between nodes happens through tubes, which are one-way named FIFO
+queues between two nodes. The source puts any Python object in the tube with
+a <tt class="docutils literal"><span class="pre">push</span></tt>, and the target gets objects in the tube
+with a (blocking) <tt class="docutils literal"><span class="pre">pop</span></tt>. This allows a simple implementation
+of synchronisation barriers.</li>
+<li>Then, the task launcher
+executes on the client and launches the task on the CPUs on the local
+machine or on several machines across the network.
+It is done by calling the Playdoh function
+<a class="reference internal" href="reference.html#playdoh.start_task" title="playdoh.start_task"><tt class="xref py py-func docutils literal"><span class="pre">start_task()</span></tt></a>. Here, we launch the task on two CPUs on the local machine.
+The <a class="reference internal" href="reference.html#playdoh.start_task" title="playdoh.start_task"><tt class="xref py py-func docutils literal"><span class="pre">start_task()</span></tt></a> function triggers the instantiation of the
+class on every node, the call to the <tt class="docutils literal"><span class="pre">initialize</span></tt> method with
+the arguments given in the <tt class="docutils literal"><span class="pre">args</span></tt> keyword argument,
+and finally the call to the <tt class="docutils literal"><span class="pre">start</span></tt> method.</li>
+</ul>
+<p>The full script:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pylab</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c"># Any task class must derive from the ParallelTask</span>
+<span class="k">class</span> <span class="nc">HeatSolver</span><span class="p">(</span><span class="n">ParallelTask</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">iterations</span><span class="p">):</span>
+        <span class="c"># X is a matrix with the function values and the boundary values</span>
+        <span class="c"># X must contain the borders of the neighbors (&quot;overlapping Xs&quot;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dx</span> <span class="o">=</span> <span class="n">dx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span> <span class="o">=</span> <span class="n">iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iteration</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">send_boundaries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Send boundaries of the grid to the neighbors</span>
+        <span class="k">if</span> <span class="s">&#39;left&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tubes_out</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s">&#39;right&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tubes_out</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="s">&#39;right&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[:,</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">recv_boundaries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Receive boundaries of the grid from the neighbors</span>
+        <span class="k">if</span> <span class="s">&#39;right&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tubes_in</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;right&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s">&#39;left&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tubes_in</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[:,</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;left&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Implement the numerical scheme for the PDE</span>
+        <span class="n">Xleft</span><span class="p">,</span> <span class="n">Xright</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="n">Xtop</span><span class="p">,</span> <span class="n">Xbottom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">2</span><span class="p">:,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span><span class="o">*</span><span class="p">(</span><span class="n">Xleft</span><span class="o">+</span><span class="n">Xright</span><span class="o">+</span><span class="n">Xtop</span><span class="o">+</span><span class="n">Xbottom</span><span class="o">-</span><span class="mi">4</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Run the numerical integration of the PDE</span>
+        <span class="k">for</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send_boundaries</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">recv_boundaries</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_matrix</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Return the result</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">heat2d</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">iterations</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+    <span class="c"># ``split`` is the grid size on each node, without the boundaries</span>
+    <span class="n">split</span> <span class="o">=</span> <span class="p">[(</span><span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="mf">1.0</span><span class="o">/</span><span class="n">nodes</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">nodes</span><span class="p">)]</span>
+    <span class="n">split</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">split</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span><span class="o">-</span><span class="mi">2</span><span class="o">-</span><span class="nb">sum</span><span class="p">(</span><span class="n">split</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">dx</span><span class="o">=</span><span class="mf">2.</span><span class="o">/</span><span class="n">n</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">dx</span><span class="o">**</span><span class="mi">2</span><span class="o">*.</span><span class="mi">2</span>
+
+    <span class="c"># y is a Dirac function at t=0</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span><span class="n">n</span><span class="p">))</span>
+    <span class="n">y</span><span class="p">[</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span><span class="n">n</span><span class="o">/</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span><span class="o">/</span><span class="n">dx</span><span class="o">**</span><span class="mi">2</span>
+
+    <span class="c"># Split y horizontally</span>
+    <span class="n">split_y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">split</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">split_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">[:,</span><span class="n">j</span><span class="p">:</span><span class="n">j</span><span class="o">+</span><span class="n">size</span><span class="o">+</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">j</span> <span class="o">+=</span> <span class="n">size</span>
+
+    <span class="c"># Define a double linear topology</span>
+    <span class="n">topology</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">nodes</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">topology</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&#39;right&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">topology</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+
+    <span class="c"># Start the task</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">start_task</span><span class="p">(</span><span class="n">HeatSolver</span><span class="p">,</span> <span class="c"># name of the task class</span>
+                      <span class="n">cpu</span> <span class="o">=</span> <span class="n">nodes</span><span class="p">,</span> <span class="c"># use ``nodes`` CPUs on the local machine</span>
+                      <span class="n">topology</span> <span class="o">=</span> <span class="n">topology</span><span class="p">,</span>
+                      <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">split_y</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">iterations</span><span class="p">))</span> <span class="c"># arguments of the ``initialize`` method</span>
+
+    <span class="c"># Retrieve the result, as a list with one element returned by ``HeatSolver.get_result`` per node</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_result</span><span class="p">()</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">hstack</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">heat2d</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">hot</span><span class="p">()</span>
+    <span class="n">imshow</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+    <span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Reference for <a class="reference internal" href="reference.html#playdoh.start_task" title="playdoh.start_task"><tt class="xref py py-func docutils literal"><span class="pre">start_task()</span></tt></a>, <a class="reference internal" href="reference.html#playdoh.ParallelTask" title="playdoh.ParallelTask"><tt class="xref py py-class docutils literal"><span class="pre">ParallelTask</span></tt></a>, examples for <a class="reference internal" href="examples.html#examples-loosely"><em>Loosely coupled parallel problems</em></a>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="using-several-computers">
+<span id="guide-machines"></span><h2>Using several computers<a class="headerlink" href="#using-several-computers" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="launching-the-playdoh-server">
+<span id="launching"></span><h3>Launching the Playdoh server<a class="headerlink" href="#launching-the-playdoh-server" title="Permalink to this headline">¶</a></h3>
+<p>Any computer within your local Ethernet network can be used to run computations
+with Playdoh. First, Python and Playdoh must be installed. Then, the Playdoh
+server must run so that computations can be submitted to it. Finally,
+when you launch a task, you can specify the special keyword <tt class="docutils literal"><span class="pre">machines</span></tt>
+which is a list containing the IP addresses of the machines to use.</p>
+<p>To launch the Playdoh server, you have two options.</p>
+<div class="section" id="using-python">
+<h4>Using Python<a class="headerlink" href="#using-python" title="Permalink to this headline">¶</a></h4>
+<p>Use the <a class="reference internal" href="reference.html#playdoh.open_server" title="playdoh.open_server"><tt class="xref py py-func docutils literal"><span class="pre">open_server()</span></tt></a> function to start the Playdoh server:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Open the server on the default port, using 4 CPUs and 1 GPU</span>
+<span class="n">open_server</span><span class="p">(</span><span class="n">maxcpu</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">maxgpu</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You can close a server remotely using the <a class="reference internal" href="reference.html#playdoh.close_servers" title="playdoh.close_servers"><tt class="xref py py-func docutils literal"><span class="pre">close_servers()</span></tt></a> function:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Close the bobs-machine.university.com server</span>
+<span class="n">close_servers</span><span class="p">([</span><span class="s">&#39;bobs-machine.university.com&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-the-command-line-tool">
+<h4>Using the command-line tool<a class="headerlink" href="#using-the-command-line-tool" title="Permalink to this headline">¶</a></h4>
+<p>You can use the <tt class="docutils literal"><span class="pre">playdoh</span></tt> command-line tool:</p>
+<div class="highlight-python"><pre># Open the server on the default port, using all CPUs and GPUs available
+playdoh open
+
+# Open the server with 2 CPUs and 1 GPU
+playdoh open 2 CPUs 1 GPU</pre>
+</div>
+<p>You can also close servers and allocate resources using this script.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Reference <a class="reference internal" href="reference.html#ref-commandline"><em>Command line tool</em></a>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="sharing-resources">
+<span id="sharing"></span><h3>Sharing resources<a class="headerlink" href="#sharing-resources" title="Permalink to this headline">¶</a></h3>
+<p>A single computer running the Playdoh server can be used py several clients
+in parallel to execute different tasks. The computers&#8217; resources need to
+be shared among the clients. To do this, each client begins by allocating
+on the server
+the number of CPUs he wants for his own computation, among all the idle CPUs
+on this machine. You have three options.</p>
+<div class="section" id="id1">
+<h4>Using Python<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h4>
+<p>Resource allocation can be done  using a few functions defined in Playdoh, most notably
+<a class="reference internal" href="reference.html#playdoh.get_available_resources" title="playdoh.get_available_resources"><tt class="xref py py-func docutils literal"><span class="pre">get_available_resources()</span></tt></a> to get the resources available on a server, and
+<a class="reference internal" href="reference.html#playdoh.request_resources" title="playdoh.request_resources"><tt class="xref py py-func docutils literal"><span class="pre">request_resources()</span></tt></a> to allocate resources on a server:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c"># Get the available resources on the specified server</span>
+<span class="n">available_resources</span> <span class="o">=</span> <span class="n">get_available_resources</span><span class="p">(</span><span class="s">&#39;bobs-machine.university.com&#39;</span><span class="p">)</span>
+
+<span class="c"># Allocate 2 CPUs on the server</span>
+<span class="n">request_resources</span><span class="p">(</span><span class="s">&#39;bobs-machine.university.com&#39;</span><span class="p">,</span> <span class="n">CPU</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Resource allocation example <a class="reference internal" href="examples-resources.html#example-resources"><em>Example: resources</em></a>, reference <a class="reference internal" href="reference.html#ref-allocation"><em>Resource allocation</em></a>.</p>
+</div>
+</div>
+<div class="section" id="using-the-client-gui">
+<h4>Using the client GUI<a class="headerlink" href="#using-the-client-gui" title="Permalink to this headline">¶</a></h4>
+<p>Resource allocation can be done with a GUI included in Playdoh and which can be run
+with the command <tt class="docutils literal"><span class="pre">playdoh_gui</span></tt>.</p>
+</div>
+<div class="section" id="id2">
+<h4>Using the command-line tool<a class="headerlink" href="#id2" title="Permalink to this headline">¶</a></h4>
+<p>The command-line tool also allows to allocate resources on servers:</p>
+<div class="highlight-python"><pre># obtain the available resources on server 'bobs-machine.university.com'
+playdoh get bobs-machine.university.com
+
+# obtain all the allocated resources on the server
+playdoh get bobs-machine.university.com all
+
+# request 2 CPUs and 1 GPU for this client
+playdoh request bobs-machine.university.com 2 CPUs 1 GPU</pre>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Reference <a class="reference internal" href="reference.html#ref-commandline"><em>Command line tool</em></a>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="server-side">
+<h3>Server-side<a class="headerlink" href="#server-side" title="Permalink to this headline">¶</a></h3>
+<p>If you run a Playdoh server on your own computer, you can specify how many resources you allocated
+to others. First, you can do that when you launch the Playdoh server (see <a class="reference internal" href="#launching"><em>Launching the Playdoh server</em></a>).
+Then, when a server is running on your machine, you can change the total number of available
+resources on your server with the function
+<a class="reference internal" href="reference.html#playdoh.set_total_resources" title="playdoh.set_total_resources"><tt class="xref py py-func docutils literal"><span class="pre">set_total_resources()</span></tt></a>. Finally, you can also use the command-line tool, like:</p>
+<div class="highlight-python"><pre>playdoh set 2 CPUs 1 GPU</pre>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Reference <a class="reference internal" href="reference.html#ref-commandline"><em>Command line tool</em></a>.</p>
+</div>
+</div>
+</div>
+<div class="section" id="advanced-features">
+<h2>Advanced features<a class="headerlink" href="#advanced-features" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="global-variables">
+<span id="global"></span><h3>Global variables<a class="headerlink" href="#global-variables" title="Permalink to this headline">¶</a></h3>
+<p>Playdoh defines several global variables.</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">MAXCPU</span></tt></dt>
+<dd>The total number of CPUs detected on this computer</dd>
+<dt><tt class="docutils literal"><span class="pre">MAXGPU</span></tt></dt>
+<dd>The total number of GPUs detected on this computer (PyCUDA must be installed). Note also that
+PyCUDA must be first initialized with a call to the function <tt class="docutils literal"><span class="pre">MAXGPU</span> <span class="pre">=</span> <span class="pre">initialise_cuda()</span></tt>
+so that PyCUDA can obtain the number of GPUs available on the current system. You can also
+get the total number of GPUs without initializing PyCUDA on the current process with a call to
+<a class="reference internal" href="reference.html#playdoh.get_gpu_count" title="playdoh.get_gpu_count"><tt class="xref py py-func docutils literal"><span class="pre">get_gpu_count()</span></tt></a>.</dd>
+<dt><tt class="docutils literal"><span class="pre">DEFAULT_PORT</span></tt></dt>
+<dd>The default port to use for the Playdoh server.</dd>
+<dt><tt class="docutils literal"><span class="pre">USERPREF</span></tt></dt>
+<dd><p class="first">User preferences dictionary.</p>
+<div class="admonition-see-also last admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="#userpref"><em>User preferences</em></a>.</p>
+</div>
+</dd>
+</dl>
+</div>
+<div class="section" id="user-preferences">
+<span id="userpref"></span><h3>User preferences<a class="headerlink" href="#user-preferences" title="Permalink to this headline">¶</a></h3>
+<p>You can define some user preferences in the file <tt class="docutils literal"><span class="pre">~/.playdoh/userpref.py</span></tt>.
+The character <tt class="docutils literal"><span class="pre">~</span></tt> refers to your home directory, which should be <tt class="docutils literal"><span class="pre">/usr/&lt;username&gt;</span></tt>
+on Linux and <tt class="docutils literal"><span class="pre">C:\Users\&lt;username\</span></tt> on Windows.</p>
+<p>Current preferences are:</p>
+<dl class="docutils">
+<dt><tt class="docutils literal"><span class="pre">authkey</span></tt></dt>
+<dd><p class="first">Authentication key used to secure communications within the network. This value must
+be the same on every computer. By default, it is <tt class="docutils literal"><span class="pre">playdohauthkey</span></tt>. You should generate
+your own key and share it with anyone who might submit computations to your computer.
+The following code snippet shows a way of generating a random 256 bits authentication key
+in Python:</p>
+<div class="last highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">binascii</span>
+<span class="n">authkey</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">hexlify</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">urandom</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
+</pre></div>
+</div>
+</dd>
+<dt><tt class="docutils literal"><span class="pre">port</span></tt></dt>
+<dd>Default port used by the Playdoh server. It is 2718 by default.</dd>
+<dt><tt class="docutils literal"><span class="pre">loglevel</span></tt></dt>
+<dd>Logging level. Can be <tt class="docutils literal"><span class="pre">'DEBUG'</span></tt>, <tt class="docutils literal"><span class="pre">'INFO'</span></tt> (default) or <tt class="docutils literal"><span class="pre">'WARNING'</span></tt>.</dd>
+<dt><tt class="docutils literal"><span class="pre">favoriteservers</span></tt></dt>
+<dd>List of your servers&#8217; IP addresses and ports presented by default in the client GUI,
+under the form <tt class="docutils literal"><span class="pre">IP:port</span></tt>.     Default is <tt class="docutils literal"><span class="pre">[]</span></tt>.</dd>
+</dl>
+<p>Here&#8217;s an example of a valid user preferences file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">USERPREF</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">USERPREF</span><span class="p">[</span><span class="s">&#39;port&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">3141</span>
+</pre></div>
+</div>
+<p>To retrieve user preferences in the code, use the global variable <tt class="docutils literal"><span class="pre">USERPREF</span></tt>
+as a dictionary:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="k">print</span> <span class="n">USERPREF</span><span class="p">[</span><span class="s">&#39;port&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="using-gpus">
+<span id="gpu"></span><h3>Using GPUs<a class="headerlink" href="#using-gpus" title="Permalink to this headline">¶</a></h3>
+<p>GPUs are natively supported by Playdoh through the PyCUDA package. It means that
+your functions can load CUDA code dynamically and run it, so that you can use
+several GPUs on a single or on several machines in parallel. GPUs can be used for both
+independent parallel problems and loosely coupled parallel problems (including optimizations).</p>
+<p>When loading CUDA code with PyCUDA, you can use the standard functions of PyCUDA to do it
+but you should never initialize the GPU drivers yourself: Playdoh takes care of that
+so that several GPUs can be handled transparently. Here&#8217;s an example of a function using PyCUDA
+and that can be safely distributed with Playdoh:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pycuda</span>
+
+<span class="c"># The function loading the CUDA code</span>
+<span class="k">def</span> <span class="nf">fun</span><span class="p">(</span><span class="n">scale</span><span class="p">):</span>
+    <span class="c"># The CUDA code, which multiplies a vector by a scale factor.</span>
+    <span class="n">code</span> <span class="o">=</span> <span class="s">&#39;&#39;&#39;</span>
+<span class="s">    __global__ void test(double *x, int n)</span>
+<span class="s">    {</span>
+<span class="s">     int i = blockIdx.x * blockDim.x + threadIdx.x;</span>
+<span class="s">     if(i&gt;=n) return;</span>
+<span class="s">     x[i] *= </span><span class="si">%d</span><span class="s">;</span>
+<span class="s">    }</span>
+<span class="s">    &#39;&#39;&#39;</span> <span class="o">%</span> <span class="n">scale</span>
+
+    <span class="c"># Compile the CUDA code to GPU code</span>
+    <span class="n">mod</span> <span class="o">=</span> <span class="n">pycuda</span><span class="o">.</span><span class="n">compiler</span><span class="o">.</span><span class="n">SourceModule</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+
+    <span class="c"># Transform the CUDA function into a Python function</span>
+    <span class="n">f</span> <span class="o">=</span> <span class="n">mod</span><span class="o">.</span><span class="n">get_function</span><span class="p">(</span><span class="s">&#39;test&#39;</span><span class="p">)</span>
+
+    <span class="c"># Create a vector on the GPU filled with 8 ones</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">pycuda</span><span class="o">.</span><span class="n">gpuarray</span><span class="o">.</span><span class="n">to_gpu</span><span class="p">(</span><span class="n">ones</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
+
+    <span class="c"># Start the function on the GPU</span>
+    <span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">int32</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span> <span class="n">block</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+
+    <span class="c"># Load the result from the GPU to the CPU</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="p">()</span>
+
+    <span class="c"># Finally, return the result</span>
+    <span class="k">return</span> <span class="n">y</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">On Linux, you may experience an issue with the CUDA code not compiling. You can fix this problem
+using <tt class="docutils literal"><span class="pre">do_redirect=True</span></tt> in the Playdoh function (<a class="reference internal" href="reference.html#playdoh.map" title="playdoh.map"><tt class="xref py py-func docutils literal"><span class="pre">map()</span></tt></a>, <a class="reference internal" href="reference.html#playdoh.minimize" title="playdoh.minimize"><tt class="xref py py-func docutils literal"><span class="pre">minimize()</span></tt></a>, etc.).</p>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">The full example <a class="reference internal" href="examples-gpu.html#example-gpu"><em>Example: gpu</em></a>, the <a class="reference external" href="http://mathema.tician.de/software/pycuda">PyCUDA website</a>.</p>
+</div>
+</div>
+<div class="section" id="resource-allocation">
+<span id="allocation"></span><h3>Resource allocation<a class="headerlink" href="#resource-allocation" title="Permalink to this headline">¶</a></h3>
+<p>Resource allocation is the way computing units (CPUs and GPUs on machines)
+are allocated to clients&#8217; computations. It can be done either manually
+or automatically. In the latter case, one specifies the machines
+and the total number of computing units to use.</p>
+<p>The main Playdoh functions accept
+special keywords <tt class="docutils literal"><span class="pre">cpu</span></tt>, <tt class="docutils literal"><span class="pre">gpu</span></tt>, <tt class="docutils literal"><span class="pre">machines</span></tt> to
+tell Playdoh how to automatically allocate available resources.
+Also, they accept the keyword <tt class="docutils literal"><span class="pre">allocate</span></tt> to do resource allocation
+manually. In this case, this keyword must accept an <a class="reference internal" href="reference.html#playdoh.Allocation" title="playdoh.Allocation"><tt class="xref py py-class docutils literal"><span class="pre">Allocation</span></tt></a> object
+returned by the function  <a class="reference internal" href="reference.html#playdoh.allocate" title="playdoh.allocate"><tt class="xref py py-func docutils literal"><span class="pre">allocate()</span></tt></a>. Manual resource allocation
+is done by specifying the number of units to use on every machine.</p>
+<p>The following example shows how to allocate automatically 10 CPUs on
+two machines:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">allocation</span> <span class="o">=</span> <span class="n">allocate</span><span class="p">(</span><span class="n">machines</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;127.0.0.1&#39;</span><span class="p">,</span> <span class="s">&#39;127.0.0.2&#39;</span><span class="p">],</span> <span class="n">cpu</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This object can then be passed to <a class="reference internal" href="reference.html#playdoh.map" title="playdoh.map"><tt class="xref py py-func docutils literal"><span class="pre">map()</span></tt></a> or other Playdoh functions.</p>
+<p>In the next example, resource allocation is done manually:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="n">manual_alloc</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;127.0.0.1&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s">&#39;127.0.0.2&#39;</span><span class="p">:</span> <span class="mi">7</span><span class="p">}</span>
+<span class="n">allocation</span> <span class="o">=</span> <span class="n">allocate</span><span class="p">(</span><span class="n">unit_type</span><span class="o">=</span><span class="s">&#39;CPU&#39;</span><span class="p">,</span> <span class="n">allocation</span><span class="o">=</span><span class="n">manual_alloc</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="reference.html#playdoh.allocate" title="playdoh.allocate"><tt class="xref py py-func docutils literal"><span class="pre">allocate()</span></tt></a>.</p>
+</div>
+</div>
+<div class="section" id="shared-data">
+<span id="id3"></span><h3>Shared data<a class="headerlink" href="#shared-data" title="Permalink to this headline">¶</a></h3>
+<p>Nodes running on different computers need to have independent
+copies of data in memory, but nodes running on different CPUs on a same computer
+may have access to shared memory. With Playdoh, it is possible to store some
+NumPy arrays in shared memory. This can be more efficient than having in memory
+as many copies of one array as processes, especially with very
+large NumPy arrays. However, such shared arrays need to be read-only in order to avoid
+contention issues when several processes try to make changes to the same data
+at the same time.</p>
+<p>Shared data can be used with <a class="reference internal" href="reference.html#playdoh.map" title="playdoh.map"><tt class="xref py py-func docutils literal"><span class="pre">map()</span></tt></a>, <a class="reference internal" href="reference.html#playdoh.minimize" title="playdoh.minimize"><tt class="xref py py-func docutils literal"><span class="pre">minimize()</span></tt></a> and
+<a class="reference internal" href="reference.html#playdoh.maximize" title="playdoh.maximize"><tt class="xref py py-func docutils literal"><span class="pre">maximize()</span></tt></a> functions, using the <tt class="docutils literal"><span class="pre">shared_data</span></tt> keyword.
+This argument is a dictionary where keys are the item names,
+and values are NumPy arrays (or any other type of data).
+Then, the task to be executed can retrieve the shared data with the same
+<tt class="docutils literal"><span class="pre">shared_data</span></tt> keyword:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">numpy.random</span> <span class="kn">import</span> <span class="n">rand</span>
+
+<span class="k">def</span> <span class="nf">fun</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">shared_data</span><span class="p">):</span>
+    <span class="n">largearray</span> <span class="o">=</span> <span class="n">shared_data</span><span class="p">[</span><span class="s">&#39;largearray&#39;</span><span class="p">]</span>
+
+<span class="nb">map</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="o">...</span><span class="p">,</span> <span class="n">shared_data</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;largearray&#39;</span><span class="p">:</span> <span class="n">rand</span><span class="p">(</span><span class="mi">1000000</span><span class="p">)})</span>
+</pre></div>
+</div>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="examples-map_shared.html#example-map-shared"><em>Example: map_shared</em></a></p>
+</div>
+<p>With optimizations, the fitness function can also accept a special keyword <tt class="docutils literal"><span class="pre">shared_data</span></tt>.</p>
+</div>
+<div class="section" id="code-transport">
+<span id="id4"></span><h3>Code transport<a class="headerlink" href="#code-transport" title="Permalink to this headline">¶</a></h3>
+<p>When distributing a Python function with Playdoh using several machines, the function&#8217;s code
+is automatically retrieved and sent to the machines. When the function imports external Python
+packages, these packages need to be installed on every machine.
+When the function imports external Python modules (.py files), these modules must be
+explicitely specified so that they are also transferred to the other machines. This is
+done using the <tt class="docutils literal"><span class="pre">codedependencies</span></tt> special keyword in the main Playdoh functions.
+This argument is a list with the modules&#8217; filenames, relatively to the main function location
+in the filesystem.</p>
+<p>The following example shows how to use the <a class="reference internal" href="reference.html#playdoh.map" title="playdoh.map"><tt class="xref py py-func docutils literal"><span class="pre">map()</span></tt></a> function with an import of
+an external module:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c"># Import an external module in the same folder</span>
+<span class="kn">from</span> <span class="nn">external_module</span> <span class="kn">import</span> <span class="n">external_fun</span>
+
+<span class="c"># The function to parallelize</span>
+<span class="k">def</span> <span class="nf">fun</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="c"># Use the function defined in the external module</span>
+    <span class="k">return</span> <span class="n">external_fun</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span>
+
+<span class="c"># This line is required on Windows, any call to a Playdoh function</span>
+<span class="c"># must be done after this line on this OS.</span>
+<span class="c"># See http://docs.python.org/library/multiprocessing.html#windows</span>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c"># Execute ``fun(1)`` and ``fun(2)`` in parallel on two CPUs on this machine</span>
+    <span class="c"># and return the result.</span>
+    <span class="c"># The ``codedependencies`` argument contains the list of external Python modules</span>
+    <span class="c"># to transfer on the machines executing the task. It is only needed when using</span>
+    <span class="c"># remote machines, and not when using CPUs on the local machine.</span>
+    <span class="k">print</span> <span class="nb">map</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">],</span> <span class="n">codedependencies</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;external_module.py&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>This also works with the <a class="reference internal" href="reference.html#playdoh.minimize" title="playdoh.minimize"><tt class="xref py py-func docutils literal"><span class="pre">minimize()</span></tt></a> and <a class="reference internal" href="reference.html#playdoh.maximize" title="playdoh.maximize"><tt class="xref py py-func docutils literal"><span class="pre">maximize()</span></tt></a> functions.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">The full example <a class="reference internal" href="examples-map_dependencies.html#example-map-dependencies"><em>Example: map_dependencies</em></a> and the reference of <a class="reference internal" href="reference.html#playdoh.map" title="playdoh.map"><tt class="xref py py-func docutils literal"><span class="pre">map()</span></tt></a>.</p>
+</div>
+</div>
+<div class="section" id="optimization-information">
+<span id="optinfo"></span><h3>Optimization information<a class="headerlink" href="#optimization-information" title="Permalink to this headline">¶</a></h3>
+<p>Some information about the optimization can be returned by the <a class="reference internal" href="reference.html#playdoh.minimize" title="playdoh.minimize"><tt class="xref py py-func docutils literal"><span class="pre">minimize()</span></tt></a>
+and <a class="reference internal" href="reference.html#playdoh.maximize" title="playdoh.maximize"><tt class="xref py py-func docutils literal"><span class="pre">maximize()</span></tt></a> functions by specifying the <cite>returninfo=True</cite> special keyword.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">Reference for the <a class="reference internal" href="reference.html#playdoh.minimize" title="playdoh.minimize"><tt class="xref py py-func docutils literal"><span class="pre">minimize()</span></tt></a> and <a class="reference internal" href="reference.html#playdoh.maximize" title="playdoh.maximize"><tt class="xref py py-func docutils literal"><span class="pre">maximize()</span></tt></a> functions.</p>
+</div>
+</div>
+<div class="section" id="optimization-groups">
+<span id="groups"></span><h3>Optimization groups<a class="headerlink" href="#optimization-groups" title="Permalink to this headline">¶</a></h3>
+<p>Several groups of parameter populations can be optimized independently and
+in parallel with the same fitness function. This allows a vectorization
+of the fitness function for different optimization runs. The number of groups
+is specified with the <tt class="docutils literal"><span class="pre">groups</span></tt> special keyword in the <a class="reference internal" href="reference.html#playdoh.minimize" title="playdoh.minimize"><tt class="xref py py-func docutils literal"><span class="pre">minimize()</span></tt></a> and
+<a class="reference internal" href="reference.html#playdoh.maximize" title="playdoh.maximize"><tt class="xref py py-func docutils literal"><span class="pre">maximize()</span></tt></a> functions. The fitness function can accept the <tt class="docutils literal"><span class="pre">groups</span></tt>
+keyword to get the number of groups. The total population on the node
+is equally subdivided into <tt class="docutils literal"><span class="pre">groups</span></tt> subpopulations.</p>
+<div class="admonition-see-also admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><a class="reference internal" href="examples-maximize_groups.html#example-maximize-groups"><em>Example: maximize_groups</em></a>, reference for the <a class="reference internal" href="reference.html#playdoh.minimize" title="playdoh.minimize"><tt class="xref py py-func docutils literal"><span class="pre">minimize()</span></tt></a> and <a class="reference internal" href="reference.html#playdoh.maximize" title="playdoh.maximize"><tt class="xref py py-func docutils literal"><span class="pre">maximize()</span></tt></a> functions.</p>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Playdoh User Guide</a><ul>
+<li><a class="reference internal" href="#quick-start">Quick Start</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#independent-parallel-problems">Independent parallel problems</a></li>
+<li><a class="reference internal" href="#optimization">Optimization</a></li>
+<li><a class="reference internal" href="#loosely-coupled-parallel-problems">Loosely coupled parallel problems</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-several-computers">Using several computers</a><ul>
+<li><a class="reference internal" href="#launching-the-playdoh-server">Launching the Playdoh server</a><ul>
+<li><a class="reference internal" href="#using-python">Using Python</a></li>
+<li><a class="reference internal" href="#using-the-command-line-tool">Using the command-line tool</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#sharing-resources">Sharing resources</a><ul>
+<li><a class="reference internal" href="#id1">Using Python</a></li>
+<li><a class="reference internal" href="#using-the-client-gui">Using the client GUI</a></li>
+<li><a class="reference internal" href="#id2">Using the command-line tool</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#server-side">Server-side</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#advanced-features">Advanced features</a><ul>
+<li><a class="reference internal" href="#global-variables">Global variables</a></li>
+<li><a class="reference internal" href="#user-preferences">User preferences</a></li>
+<li><a class="reference internal" href="#using-gpus">Using GPUs</a></li>
+<li><a class="reference internal" href="#resource-allocation">Resource allocation</a></li>
+<li><a class="reference internal" href="#shared-data">Shared data</a></li>
+<li><a class="reference internal" href="#code-transport">Code transport</a></li>
+<li><a class="reference internal" href="#optimization-information">Optimization information</a></li>
+<li><a class="reference internal" href="#optimization-groups">Optimization groups</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to Playdoh&#8217;s documentation!</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="examples.html"
+                        title="next chapter">Examples</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/playdoh.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="examples.html" title="Examples"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to Playdoh’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">Playdoh v0.3.1 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2011, Cyrille Rossant, Bertrand Fontaine, Dan Goodman.
+      Last updated on Aug 17, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.6.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-6773961-3']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

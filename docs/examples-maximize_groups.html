@@ -1,0 +1,170 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Example: maximize_groups &mdash; Playdoh v0.3.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Playdoh v0.3.1 documentation" href="index.html" />
+    <link rel="up" title="Examples" href="examples.html" />
+    <link rel="next" title="Example: monte_carlo" href="examples-monte_carlo.html" />
+    <link rel="prev" title="Example: maximize_class" href="examples-maximize_class.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="examples-monte_carlo.html" title="Example: monte_carlo"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="examples-maximize_class.html" title="Example: maximize_class"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Playdoh v0.3.1 documentation</a> &raquo;</li>
+          <li><a href="examples.html" accesskey="U">Examples</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="example-maximize-groups">
+<span id="id1"></span><h1>Example: maximize_groups<a class="headerlink" href="#example-maximize-groups" title="Permalink to this headline">¶</a></h1>
+<p>Example of <a class="reference internal" href="reference.html#playdoh.maximize" title="playdoh.maximize"><tt class="xref py py-func docutils literal"><span class="pre">maximize()</span></tt></a> with several groups. Groups allow to optimize
+a fitness function with different parameters in parallel but by
+vectorizing the fitness evaluation for all groups.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+
+
+<span class="c"># The fitness function is a Gaussian with different centers for</span>
+<span class="c"># different groups ``shared_data`` contains the different centers.</span>
+<span class="k">def</span> <span class="nf">fun</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">nodesize</span><span class="p">,</span> <span class="n">shared_data</span><span class="p">,</span> <span class="n">groups</span><span class="p">):</span>
+    <span class="c"># Expand ``x0`` and ``y0`` to match the total population size</span>
+    <span class="n">x0</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">shared_data</span><span class="p">[</span><span class="s">&#39;x0&#39;</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nodesize</span> <span class="o">/</span> <span class="n">groups</span><span class="p">))</span>
+    <span class="n">y0</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">shared_data</span><span class="p">[</span><span class="s">&#39;y0&#39;</span><span class="p">],</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">nodesize</span> <span class="o">/</span> <span class="n">groups</span><span class="p">))</span>
+    <span class="c"># Compute the Gaussian for all centers in a vectorized fashion</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">-</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c"># Maximize the fitness function in parallel</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">maximize</span><span class="p">(</span><span class="n">fun</span><span class="p">,</span>
+                       <span class="n">popsize</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>  <span class="c"># size of the population for each group</span>
+                       <span class="n">maxiter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>  <span class="c"># maximum number of iterations</span>
+                       <span class="n">cpu</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c"># number of CPUs to use on the local machine</span>
+                       <span class="n">groups</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>  <span class="c"># number of groups</span>
+                       <span class="n">algorithm</span><span class="o">=</span><span class="n">CMAES</span><span class="p">,</span>  <span class="c"># optimization algorithm, can be PSO,</span>
+                                         <span class="c"># GA or CMAES</span>
+                       <span class="n">shared_data</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;x0&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>  <span class="c"># centers of the Gaussian</span>
+                                                      <span class="c"># for each group</span>
+                                    <span class="s">&#39;y0&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]},</span>
+                       <span class="n">x_initrange</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span>  <span class="c"># initial interval for the</span>
+                                                 <span class="c"># ``x`` parameter</span>
+                       <span class="n">y_initrange</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>  <span class="c"># initial interval for the</span>
+                                                 <span class="c"># ``y`` parameter</span>
+
+    <span class="c"># Display the final result in a table</span>
+    <span class="n">print_table</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="examples-maximize_class.html"
+                        title="previous chapter">Example: maximize_class</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="examples-monte_carlo.html"
+                        title="next chapter">Example: monte_carlo</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/examples-maximize_groups.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="examples-monte_carlo.html" title="Example: monte_carlo"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="examples-maximize_class.html" title="Example: maximize_class"
+             >previous</a> |</li>
+        <li><a href="index.html">Playdoh v0.3.1 documentation</a> &raquo;</li>
+          <li><a href="examples.html" >Examples</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2011, Cyrille Rossant, Bertrand Fontaine, Dan Goodman.
+      Last updated on Aug 17, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.6.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-6773961-3']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

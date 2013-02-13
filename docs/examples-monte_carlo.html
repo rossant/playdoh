@@ -1,0 +1,180 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Example: monte_carlo &mdash; Playdoh v0.3.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Playdoh v0.3.1 documentation" href="index.html" />
+    <link rel="up" title="Examples" href="examples.html" />
+    <link rel="next" title="Example: heat_equation" href="examples-heat_equation.html" />
+    <link rel="prev" title="Example: maximize_groups" href="examples-maximize_groups.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="examples-heat_equation.html" title="Example: heat_equation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="examples-maximize_groups.html" title="Example: maximize_groups"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Playdoh v0.3.1 documentation</a> &raquo;</li>
+          <li><a href="examples.html" accesskey="U">Examples</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="example-monte-carlo">
+<span id="id1"></span><h1>Example: monte_carlo<a class="headerlink" href="#example-monte-carlo" title="Permalink to this headline">¶</a></h1>
+<p>Monte Carlo simulation example of pi estimation.
+This example shows how to use the Playdoh interface
+to execute loosely coupled parallel tasks.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+
+<span class="c"># Any task class must derive from the ParallelTask</span>
+<span class="k">class</span> <span class="nc">PiMonteCarlo</span><span class="p">(</span><span class="n">ParallelTask</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+        <span class="c"># Specify the number of samples on this node</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Draw n points uniformly in [0,1]^2</span>
+        <span class="n">samples</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span>
+        <span class="c"># Count the number of points inside the quarter unit circle</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="n">samples</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="p">:]</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">get_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Return the result</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">count</span>
+
+
+<span class="k">def</span> <span class="nf">pi_montecarlo</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">nodes</span><span class="p">):</span>
+    <span class="c"># Calculate the number of samples for each node</span>
+    <span class="n">split_samples</span> <span class="o">=</span> <span class="p">[</span><span class="n">samples</span> <span class="o">/</span> <span class="n">nodes</span><span class="p">]</span> <span class="o">*</span> <span class="n">nodes</span>
+    <span class="c"># Launch the task on the local CPUs</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">start_task</span><span class="p">(</span><span class="n">PiMonteCarlo</span><span class="p">,</span>  <span class="c"># name of the task class</span>
+                      <span class="n">cpu</span><span class="o">=</span><span class="n">nodes</span><span class="p">,</span>  <span class="c"># use &lt;nodes&gt; CPUs on the local machine</span>
+                      <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">split_samples</span><span class="p">,))</span>  <span class="c"># arguments of</span>
+                                              <span class="c"># MonteCarlo.initialize</span>
+                                              <span class="c"># as a list,</span>
+                                              <span class="c"># node #i receives</span>
+                                              <span class="c"># split_samples[i]</span>
+                                              <span class="c"># as argument</span>
+    <span class="c"># Retrieve the result, as a list with one element returned</span>
+    <span class="c"># by MonteCarlo.get_result per node</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_result</span><span class="p">()</span>
+
+    <span class="c"># Return the estimation of Pi</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">*</span> <span class="mf">4.0</span> <span class="o">/</span> <span class="n">samples</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="c"># Evaluate Pi with 10,000 samples and 2 CPUs</span>
+    <span class="k">print</span> <span class="n">pi_montecarlo</span><span class="p">(</span><span class="mi">1000000</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="examples-maximize_groups.html"
+                        title="previous chapter">Example: maximize_groups</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="examples-heat_equation.html"
+                        title="next chapter">Example: heat_equation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/examples-monte_carlo.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="examples-heat_equation.html" title="Example: heat_equation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="examples-maximize_groups.html" title="Example: maximize_groups"
+             >previous</a> |</li>
+        <li><a href="index.html">Playdoh v0.3.1 documentation</a> &raquo;</li>
+          <li><a href="examples.html" >Examples</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2011, Cyrille Rossant, Bertrand Fontaine, Dan Goodman.
+      Last updated on Aug 17, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.6.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-6773961-3']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

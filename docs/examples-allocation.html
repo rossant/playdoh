@@ -1,0 +1,151 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Example: allocation &mdash; Playdoh v0.3.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Playdoh v0.3.1 documentation" href="index.html" />
+    <link rel="up" title="Examples" href="examples.html" />
+    <link rel="next" title="Example: resources" href="examples-resources.html" />
+    <link rel="prev" title="Example: heat_equation" href="examples-heat_equation.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="examples-resources.html" title="Example: resources"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="examples-heat_equation.html" title="Example: heat_equation"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Playdoh v0.3.1 documentation</a> &raquo;</li>
+          <li><a href="examples.html" accesskey="U">Examples</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="example-allocation">
+<span id="id1"></span><h1>Example: allocation<a class="headerlink" href="#example-allocation" title="Permalink to this headline">¶</a></h1>
+<p>Resource allocation example showing how to allocate manually
+resources on the servers.
+The Playdoh server must run on the local machine and on
+the default port (2718 by default)
+for this script to work.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="c"># It can also be a list of server IP addresses</span>
+<span class="n">servers</span> <span class="o">=</span> <span class="s">&#39;localhost&#39;</span>
+
+<span class="c"># Allocate automatically the maximum number of resources on the</span>
+<span class="c"># specified servers</span>
+<span class="n">alloc</span> <span class="o">=</span> <span class="n">allocate</span><span class="p">(</span><span class="n">servers</span><span class="p">)</span>
+
+<span class="c"># alloc is an Allocation object, it can be used as a dictionary</span>
+<span class="k">for</span> <span class="n">machine</span><span class="p">,</span> <span class="n">count</span> <span class="ow">in</span> <span class="n">alloc</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+    <span class="k">print</span> <span class="s">&quot;</span><span class="si">%d</span><span class="s"> CPUs allocated on machine </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">count</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">machine</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="examples-heat_equation.html"
+                        title="previous chapter">Example: heat_equation</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="examples-resources.html"
+                        title="next chapter">Example: resources</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/examples-allocation.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="examples-resources.html" title="Example: resources"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="examples-heat_equation.html" title="Example: heat_equation"
+             >previous</a> |</li>
+        <li><a href="index.html">Playdoh v0.3.1 documentation</a> &raquo;</li>
+          <li><a href="examples.html" >Examples</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2011, Cyrille Rossant, Bertrand Fontaine, Dan Goodman.
+      Last updated on Aug 17, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.6.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-6773961-3']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>

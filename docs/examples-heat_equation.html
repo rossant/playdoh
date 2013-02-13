@@ -1,0 +1,240 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Example: heat_equation &mdash; Playdoh v0.3.1 documentation</title>
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Playdoh v0.3.1 documentation" href="index.html" />
+    <link rel="up" title="Examples" href="examples.html" />
+    <link rel="next" title="Example: allocation" href="examples-allocation.html" />
+    <link rel="prev" title="Example: monte_carlo" href="examples-monte_carlo.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="examples-allocation.html" title="Example: allocation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="examples-monte_carlo.html" title="Example: monte_carlo"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Playdoh v0.3.1 documentation</a> &raquo;</li>
+          <li><a href="examples.html" accesskey="U">Examples</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="example-heat-equation">
+<span id="id1"></span><h1>Example: heat_equation<a class="headerlink" href="#example-heat-equation" title="Permalink to this headline">¶</a></h1>
+<p>PDE parallel numerical solver.
+This example shows how to numerically solve the heat equation on a square
+in parallel.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">playdoh</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">pylab</span> <span class="kn">import</span> <span class="o">*</span>
+
+
+<span class="c"># Any task class must derive from the ParallelTask</span>
+<span class="k">class</span> <span class="nc">HeatSolver</span><span class="p">(</span><span class="n">ParallelTask</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">iterations</span><span class="p">):</span>
+        <span class="c"># X is a matrix with the function values and the boundary values</span>
+        <span class="c"># X must contain the borders of the neighbors (&quot;overlapping Xs&quot;)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span> <span class="o">=</span> <span class="n">X</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dx</span> <span class="o">=</span> <span class="n">dx</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">=</span> <span class="n">dt</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span> <span class="o">=</span> <span class="n">iterations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iteration</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">send_boundaries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Send boundaries of the grid to the neighbors</span>
+        <span class="k">if</span> <span class="s">&#39;left&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tubes_out</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s">&#39;right&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tubes_out</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">push</span><span class="p">(</span><span class="s">&#39;right&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">recv_boundaries</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Receive boundaries of the grid from the neighbors</span>
+        <span class="k">if</span> <span class="s">&#39;right&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tubes_in</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;right&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s">&#39;left&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tubes_in</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s">&#39;left&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">update_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Implement the numerical scheme for the PDE</span>
+        <span class="n">Xleft</span><span class="p">,</span> <span class="n">Xright</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">:]</span>
+        <span class="n">Xtop</span><span class="p">,</span> <span class="n">Xbottom</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">2</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dt</span> <span class="o">*</span> <span class="p">(</span><span class="n">Xleft</span> <span class="o">+</span> <span class="n">Xright</span> <span class="o">+</span> <span class="n">Xtop</span> <span class="o">+</span> <span class="n">Xbottom</span> <span class="o">-</span> \
+            <span class="mi">4</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">dx</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="k">def</span> <span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Run the numerical integration of the PDE</span>
+        <span class="k">for</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">):</span>
+            <span class="n">log_info</span><span class="p">(</span><span class="s">&quot;Iteration </span><span class="si">%d</span><span class="s">/</span><span class="si">%d</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">iteration</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                                          <span class="bp">self</span><span class="o">.</span><span class="n">iterations</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">send_boundaries</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">recv_boundaries</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update_matrix</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_result</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c"># Return the result</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">X</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">heat2d</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">iterations</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">machines</span><span class="o">=</span><span class="p">[]):</span>
+    <span class="c"># Default allocation</span>
+    <span class="n">allocation</span> <span class="o">=</span> <span class="n">allocate</span><span class="p">(</span><span class="n">machines</span><span class="o">=</span><span class="n">machines</span><span class="p">,</span> <span class="n">cpu</span><span class="o">=</span><span class="n">nodes</span><span class="p">)</span>
+    <span class="n">nodes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">allocation</span><span class="p">)</span>
+
+    <span class="c"># ``split`` is the grid size on each node, without the boundaries</span>
+    <span class="n">split</span> <span class="o">=</span> <span class="p">[(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="n">nodes</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">nodes</span><span class="p">)]</span>
+    <span class="n">split</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">split</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="n">split</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">split</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">dx</span> <span class="o">=</span> <span class="mf">2.</span> <span class="o">/</span> <span class="n">n</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">dx</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">*</span> <span class="o">.</span><span class="mi">2</span>
+
+    <span class="c"># y is a Dirac function at t=0</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="n">y</span><span class="p">[</span><span class="n">n</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">n</span> <span class="o">/</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">dx</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="c"># Split y horizontally</span>
+    <span class="n">split_y</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">nodes</span><span class="p">):</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="n">split</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">split_y</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">[:,</span> <span class="n">j</span><span class="p">:</span><span class="n">j</span> <span class="o">+</span> <span class="n">size</span> <span class="o">+</span> <span class="mi">2</span><span class="p">])</span>
+        <span class="n">j</span> <span class="o">+=</span> <span class="n">size</span>
+
+    <span class="c"># Define a double linear topology</span>
+    <span class="n">topology</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="n">nodes</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="n">topology</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&#39;right&#39;</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">topology</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="s">&#39;left&#39;</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="p">))</span>
+
+    <span class="c"># Start the task</span>
+    <span class="n">task</span> <span class="o">=</span> <span class="n">start_task</span><span class="p">(</span><span class="n">HeatSolver</span><span class="p">,</span>  <span class="c"># name of the task class</span>
+                      <span class="n">topology</span><span class="o">=</span><span class="n">topology</span><span class="p">,</span>
+                      <span class="n">allocation</span><span class="o">=</span><span class="n">allocation</span><span class="p">,</span>
+                      <span class="n">args</span><span class="o">=</span><span class="p">(</span><span class="n">split_y</span><span class="p">,</span> <span class="n">dx</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">iterations</span><span class="p">))</span>  <span class="c"># arguments of the</span>
+                                                           <span class="c"># ``initialize``</span>
+                                                           <span class="c"># method</span>
+
+    <span class="c"># Retrieve the result, as a list with one element returned</span>
+    <span class="c"># by ``MonteCarlo.get_result`` per node</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">task</span><span class="o">.</span><span class="n">get_result</span><span class="p">()</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">hstack</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">result</span>
+
+
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">heat2d</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="n">nodes</span><span class="o">=</span><span class="n">MAXCPU</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="c">#    hot()</span>
+<span class="c">#    imshow(result)</span>
+<span class="c">#    show()</span>
+</pre></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+            <p class="logo"><a href="index.html">
+              <img class="logo" src="_static/logo.png" alt="Logo"/>
+            </a></p>
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="examples-monte_carlo.html"
+                        title="previous chapter">Example: monte_carlo</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="examples-allocation.html"
+                        title="next chapter">Example: allocation</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/examples-heat_equation.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="examples-allocation.html" title="Example: allocation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="examples-monte_carlo.html" title="Example: monte_carlo"
+             >previous</a> |</li>
+        <li><a href="index.html">Playdoh v0.3.1 documentation</a> &raquo;</li>
+          <li><a href="examples.html" >Examples</a> &raquo;</li> 
+      </ul>
+    </div>
+
+    <div class="footer">
+        &copy; Copyright 2011, Cyrille Rossant, Bertrand Fontaine, Dan Goodman.
+      Last updated on Aug 17, 2011.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.6.
+    </div>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-6773961-3']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+  </body>
+</html>
