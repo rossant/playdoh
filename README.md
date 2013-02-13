@@ -43,7 +43,7 @@ small cluster at no cost.
 
 ## Documentation
 
-[The documentation can be found here](http://playdoh.googlecode.com/svn/docs/index.html).
+[The documentation can be found here](https://playdoh-python.readthedocs.org/en/latest/index.html).
 
 ## Paper
 
