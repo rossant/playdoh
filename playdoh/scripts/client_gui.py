@@ -8,9 +8,16 @@ on remote servers
 and to allocate resources to the current client.
 """
 
-import wx
-import numpy
 from playdoh import *
+try:
+    import wx
+    from wx import Frame
+except ImportError:
+    log_info("wx is not installed, the GUI will not be available.")
+    # HACK: if wx is not available, Frame is just a standard class instead
+    # of a wx class
+    Frame = object
+import numpy
 from threading import Thread
 
 # begin wxGlade: extracode
@@ -93,7 +100,7 @@ class Proxy(object):
         GC.disconnect()
 
 
-class MyFrame(wx.Frame):
+class MyFrame(Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: MyFrame.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
